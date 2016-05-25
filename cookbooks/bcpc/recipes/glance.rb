@@ -172,7 +172,7 @@ bash "glance-cirros-image" do
         . /root/adminrc
         . /root/api_versionsrc
         qemu-img convert -f qcow2 -O raw /tmp/cirros-0.3.4-x86_64-disk.img /tmp/cirros-0.3.4-x86_64-disk.raw
-        glance image-create --name='Cirros 0.3.4 x86_64' --visibility=public --container-format=bare --disk-format=raw --file /tmp/cirros-0.3.4-x86_64-disk.raw
+        openstack image create --public --container-format=bare --disk-format=raw --file /tmp/cirros-0.3.4-x86_64-disk.raw 'Cirros 0.3.4 x86_64'
     EOH
-    not_if ". /root/adminrc; glance image-list | grep 'Cirros 0.3.4 x86_64'"
+    not_if ". /root/adminrc; openstack image list | grep 'Cirros 0.3.4 x86_64'"
 end
