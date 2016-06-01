@@ -455,9 +455,9 @@ ca_certs = /etc/keystone/cert.pem
 #enforce_token_bind = permissive
 #expiration = 3600
 <% if is_kilo? %>
-provider = keystone.token.providers.<%= node['bcpc']['keystone']['providers']['token'] %>.Provider
+provider = keystone.token.providers.pki.Provider
 <% else %>
-provider = <%= node['bcpc']['keystone']['providers']['token'] %>
+provider = fernet
 <% end %>
 <% if node['bcpc']['keystone']['enable_caching'] %>
 <% if is_kilo? %>
