@@ -19,12 +19,24 @@
 
 include_recipe "bcpc::ceph-common"
 
+mon_path = "/var/lib/ceph/mon/ceph-#{node['hostname']}"
+
 bash 'ceph-mon-mkfs' do
-    code <<-EOH
-        mkdir -p /var/lib/ceph/mon/ceph-#{node['hostname']}
-        ceph-mon --mkfs -i "#{node['hostname']}" --keyring "/etc/ceph/ceph.mon.keyring"
-    EOH
-    not_if "test -f /var/lib/ceph/mon/ceph-#{node['hostname']}/keyring"
+  code <<-EOH
+    mkdir -p #{mon_path}
+    ceph-mon --mkfs -i "#{node['hostname']}" --keyring "/etc/ceph/ceph.mon.keyring"
+  EOH
+  user 'ceph'
+  not_if "test -f /var/lib/ceph/mon/ceph-#{node['hostname']}/keyring"
+end
+
+# add files required by Jewel upstart scripts for monitor autostart
+%w( done upstart ).each do |f|
+  file ::File.join(mon_path, f) do
+    owner 'ceph'
+    group 'ceph'
+    mode  00644
+  end
 end
 
 template '/etc/init/ceph-mon-renice.conf' do
