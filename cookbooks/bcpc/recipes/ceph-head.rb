@@ -266,7 +266,6 @@ bash "create-ceph-glance-user" do
 end
 
 bash "create-ceph-cinder-keyring" do
-  user "root"
   code "ceph auth get-or-create client.cinder  > /etc/ceph/ceph.client.cinder.keyring"
   not_if "test -f  /etc/ceph/ceph.client.cinder.keyring"
 end
@@ -279,7 +278,6 @@ ruby_block "store-cinder-ceph-key" do
 end
 
 bash "create-ceph-glance-keyring" do
-  user "root"
   code "ceph auth get-or-create client.glance  > /etc/ceph/ceph.client.glance.keyring"
   not_if "test -f  /etc/ceph/ceph.client.glance.keyring"
 end

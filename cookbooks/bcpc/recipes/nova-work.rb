@@ -235,8 +235,10 @@ bcpc_patch 'nova-api-metadata-base-liberty-12.0.1-plus' do
   shasums_before_apply 'nova-api-metadata-base-liberty-12.0.1-plus-BEFORE.SHASUMS'
   shasums_after_apply  'nova-api-metadata-base-liberty-12.0.1-plus-AFTER.SHASUMS'
   notifies :restart, 'service[nova-api]', :immediately
-  only_if "dpkg --compare-versions $(dpkg -s python-nova | egrep '^Version:' | awk '{ print $NF }') ge 2:12.0.1-0ubuntu1~cloud0"
+  only_if "dpkg --compare-versions $(dpkg -s python-nova | egrep '^Version:' | awk '{ print $NF }') ge 2:12.0.1-0ubuntu1~cloud0 && dpkg --compare-versions $(dpkg -s python-nova | egrep '^Version:' | awk '{ print $NF }') lt 2:13.0.0-0ubuntu2~cloud0"
 end
+
+# TODO add above patch for Mitaka
 
 # Remove patch files used by older patching resource
 file "/usr/lib/python2.7/dist-packages/nova/network/linux_net.py.prepatch" do
@@ -287,5 +289,7 @@ bcpc_patch "nova-network-liberty-linux_net" do
   shasums_before_apply 'nova-network-liberty-linux_net-BEFORE.SHASUMS'
   shasums_after_apply  'nova-network-liberty-linux_net-AFTER.SHASUMS'
   notifies :restart, 'service[nova-network]', :immediately
-  only_if "dpkg --compare-versions $(dpkg -s python-nova | egrep '^Version:' | awk '{ print $NF }') ge 2:0"
+  only_if "dpkg --compare-versions $(dpkg -s python-nova | egrep '^Version:' | awk '{ print $NF }') ge 2:0 && dpkg --compare-versions $(dpkg -s python-nova | egrep '^Version:' | awk '{ print $NF }') lt 2:13.0.0-0ubuntu2~cloud0"
 end
+
+# TODO add above patch for Mitaka

@@ -28,6 +28,7 @@ bash "write-client-admin-key" do
             --add-key="$ADMIN_KEY"
         chmod 644 /etc/ceph/ceph.client.admin.keyring
     EOH
+    user 'ceph'
     not_if "test -f /etc/ceph/ceph.client.admin.keyring && chmod 644 /etc/ceph/ceph.client.admin.keyring"
 end
 
@@ -39,5 +40,6 @@ bash "write-bootstrap-osd-key" do
             --name=client.bootstrap-osd \
             --add-key="$BOOTSTRAP_KEY"
     EOH
+    user 'ceph'
     not_if "test -f /var/lib/ceph/bootstrap-osd/ceph.keyring"
 end

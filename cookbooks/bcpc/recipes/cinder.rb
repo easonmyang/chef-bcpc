@@ -166,7 +166,7 @@ end
 
 # this is a synchronization resource that polls Cinder until it stops returning 503s
 bash "wait-for-cinder-to-become-operational" do
-    code ". /root/adminrc; until cinder list >/dev/null 2>&1; do sleep 1; done"
+    code ". /root/adminrc; until openstack volume list >/dev/null 2>&1; do sleep 1; done"
     timeout 120
 end
 

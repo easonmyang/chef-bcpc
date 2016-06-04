@@ -46,18 +46,25 @@ file "/var/lib/ceph/radosgw/ceph-radosgw.gateway/done" do
     action :touch
 end
 
-bash "write-client-radosgw-key" do
-    code <<-EOH
-        RGW_KEY=`ceph --name client.admin --keyring /etc/ceph/ceph.client.admin.keyring auth get-or-create-key client.radosgw.gateway osd 'allow rwx' mon 'allow rw'`
-        ceph-authtool "/var/lib/ceph/radosgw/ceph-radosgw.gateway/keyring" \
-            --create-keyring \
-            --name=client.radosgw.gateway \
-            --add-key="$RGW_KEY"
-        chmod 644 /var/lib/ceph/radosgw/ceph-radosgw.gateway/keyring
-    EOH
-    not_if "test -f /var/lib/ceph/radosgw/ceph-radosgw.gateway/keyring"
-    notifies :restart, "service[radosgw-all]", :delayed
+bash "create-ceph-radosgw-keyring" do
+  code "ceph auth get-or-create client.radosgw  > /etc/ceph/ceph.client.radosgw.keyring"
+  not_if "test -f /etc/ceph/ceph.client.radosgw.keyring"
 end
+
+# radosgw_key = '/etc/ceph/ceph.client.radosgw.keyring'
+# bash "write-client-radosgw-key" do
+#     code <<-EOH
+#         RGW_KEY=`ceph --name client.admin --keyring /etc/ceph/ceph.client.admin.keyring auth get-or-create-key client.radosgw.gateway osd 'allow rwx' mon 'allow rw'`
+#         ceph-authtool #{radosgw_key} \
+#             --create-keyring \
+#             --name=client.radosgw.gateway \
+#             --add-key="$RGW_KEY"
+#         chmod 644 #{radosgw_key}
+#     EOH
+#     user 'ceph'
+#     not_if "test -f #{radosgw_key}"
+#     notifies :restart, "service[radosgw-all]", :delayed
+# end
 
 rgw_optimal_pg = power_of_2(get_ceph_osd_nodes.length*node['bcpc']['ceph']['pgs_per_node']/node['bcpc']['ceph']['rgw']['replicas']*node['bcpc']['ceph']['rgw']['portion']/100)
 

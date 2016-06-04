@@ -71,7 +71,7 @@ bcpc_patch 'horizon-swift-content-length-liberty' do
   shasums_before_apply 'horizon-swift-content-length-liberty-BEFORE.SHASUMS'
   shasums_after_apply  'horizon-swift-content-length-liberty-AFTER.SHASUMS'
   notifies :restart, 'service[apache2]', :delayed
-  only_if "dpkg --compare-versions $(dpkg -s openstack-dashboard | egrep '^Version:' | awk '{ print $NF }') ge 2:0"
+  only_if "dpkg --compare-versions $(dpkg -s openstack-dashboard | egrep '^Version:' | awk '{ print $NF }') ge 2:0 && dpkg --compare-versions $(dpkg -s openstack-dashboard | egrep '^Version:' | awk '{ print $NF }') lt 2:9.0"
 end
 
 # this adds a way to override and customize Horizon's behavior
@@ -225,6 +225,7 @@ bcpc_patch 'horizon-openrc-api-versions' do
   shasums_before_apply 'horizon-openrc-api-versions-BEFORE.SHASUMS'
   shasums_after_apply  'horizon-openrc-api-versions-AFTER.SHASUMS'
   notifies :reload, 'service[apache2]', :immediately
+  only_if "dpkg --compare-versions $(dpkg -s openstack-dashboard | egrep '^Version:' | awk '{ print $NF }') ge 2:0 && dpkg --compare-versions $(dpkg -s openstack-dashboard | egrep '^Version:' | awk '{ print $NF }') lt 2:9.0"
 end
 
 # update openrc.sh template to provide additional environment variables and user domain
@@ -237,4 +238,5 @@ cookbook_file openrc_path do
   owner  'root'
   group  'root'
   mode   00644
+  only_if "dpkg --compare-versions $(dpkg -s openstack-dashboard | egrep '^Version:' | awk '{ print $NF }') ge 2:0 && dpkg --compare-versions $(dpkg -s openstack-dashboard | egrep '^Version:' | awk '{ print $NF }') lt 2:9.0"
 end
