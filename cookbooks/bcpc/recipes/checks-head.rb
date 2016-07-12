@@ -1,6 +1,6 @@
 include_recipe "bcpc::checks-common"
 
-%w{ rgw mysql }.each do |cc|
+%w{ mysql }.each do |cc|
     template  "/usr/local/etc/checks/#{cc}.yml" do
         source "checks/#{cc}.yml.erb"
         owner "root"
@@ -16,7 +16,7 @@ include_recipe "bcpc::checks-common"
 end
 
 if node['bcpc']['enabled']['monitoring'] then
-    %w{ nova rgw }.each do |cc|
+    %w{ nova }.each do |cc|
         cron "check-#{cc}" do
             home "/var/lib/zabbix"
             user "root"

@@ -38,7 +38,27 @@ if platform?("debian", "ubuntu")
     include_recipe "bcpc::networking"
 end
 
-%w{librados2 librbd1 libcephfs1 python-ceph ceph ceph-common ceph-fs-common ceph-mds ceph-fuse}.each do |pkg|
+# install ceph-common separately to seed ceph user/group for Jewel
+package 'ceph-common' do
+  # use Ceph repository instead of UCA
+  # UCA release looks like "trusty-proposed" or "trusty-updates"
+  default_release 'trusty'
+  action :upgrade
+end
+
+directory '/var/lib/ceph' do
+  owner node['bcpc']['ceph']['user']
+  group node['bcpc']['ceph']['group']
+  mode  00750
+end
+
+directory '/var/run/ceph' do
+  owner node['bcpc']['ceph']['user']
+  group node['bcpc']['ceph']['group']
+  mode  00770
+end
+
+%w(librados2 librbd1 libcephfs1 python-ceph ceph ceph-fs-common ceph-mds ceph-fuse).each do |pkg|
   package pkg do
     # use Ceph repository instead of UCA
     # UCA release looks like "trusty-proposed" or "trusty-updates"
@@ -55,27 +75,30 @@ ruby_block "initialize-ceph-common-config" do
 end
 
 ruby_block 'write-ceph-mon-key' do
-    block do
-        %x[ ceph-authtool "/etc/ceph/ceph.mon.keyring" \
-                --create-keyring \
-                --name=mon. \
-                --add-key="#{get_config('ceph-mon-key')}" \
-                --cap mon 'allow *'
-        ]
-    end
-    not_if "test -f /etc/ceph/ceph.mon.keyring"
+  block do
+    keyring_file = '/etc/ceph/ceph.mon.keyring'
+    %x[ ceph-authtool "#{keyring_file}" \
+            --create-keyring \
+            --name=mon. \
+            --add-key="#{get_config('ceph-mon-key')}" \
+            --cap mon 'allow *'
+    ]
+    # need to rechown to the Ceph user/group here
+    %x[
+      chown \
+      #{node['bcpc']['ceph']['user']}:#{node['bcpc']['ceph']['group']} \
+      #{keyring_file}
+    ]
+  end
+  not_if { ::File.exist?('/etc/ceph/ceph.mon.keyring') }
 end
 
 template '/etc/ceph/ceph.conf' do
-    source 'ceph.conf.erb'
-    mode '0644'
-    variables(:servers => get_head_nodes)
-end
-
-directory "/var/run/ceph/" do
-  owner "root"
-  group "root"
-  mode  "0755"
+  source 'ceph.conf.erb'
+  owner node['bcpc']['ceph']['user']
+  group node['bcpc']['ceph']['group']
+  mode  00644
+  variables(:servers => get_head_nodes)
 end
 
 package 'libvirt-bin' do

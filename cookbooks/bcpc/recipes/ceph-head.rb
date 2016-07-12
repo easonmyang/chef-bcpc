@@ -20,11 +20,12 @@
 include_recipe "bcpc::ceph-common"
 
 bash 'ceph-mon-mkfs' do
-    code <<-EOH
-        mkdir -p /var/lib/ceph/mon/ceph-#{node['hostname']}
-        ceph-mon --mkfs -i "#{node['hostname']}" --keyring "/etc/ceph/ceph.mon.keyring"
-    EOH
-    not_if "test -f /var/lib/ceph/mon/ceph-#{node['hostname']}/keyring"
+  user node['bcpc']['ceph']['user']
+  code <<-EOH
+      mkdir -p /var/lib/ceph/mon/ceph-#{node['hostname']}
+      ceph-mon --mkfs -i "#{node['hostname']}" --keyring "/etc/ceph/ceph.mon.keyring"
+  EOH
+  not_if "test -f /var/lib/ceph/mon/ceph-#{node['hostname']}/keyring"
 end
 
 template '/etc/init/ceph-mon-renice.conf' do
@@ -38,7 +39,6 @@ service 'ceph-mon-renice' do
   action [:enable, :start]
   restart_command 'service ceph-mon-renice restart'
 end
-
 
 execute "ceph-mon-start" do
     command "initctl emit ceph-mon id='#{node['hostname']}'"

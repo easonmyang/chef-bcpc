@@ -24,6 +24,12 @@
 include_recipe "bcpc::apache2"
 include_recipe "bcpc::ceph-work"
 
+directory '/var/log/radosgw' do
+  owner node['bcpc']['ceph']['user']
+  group node['bcpc']['ceph']['user']
+  mode 0755
+end
+
 package "radosgw" do
   default_release 'trusty'  # use Ceph repository instead of UCA
   action :upgrade
@@ -32,21 +38,22 @@ end
 package "python-boto"
 
 directory "/var/lib/ceph/radosgw/ceph-radosgw.gateway" do
-    owner "root"
-    group "root"
+    owner node['bcpc']['ceph']['user']
+    group node['bcpc']['ceph']['user']
     mode 0755
     action :create
     recursive true
 end
 
 file "/var/lib/ceph/radosgw/ceph-radosgw.gateway/done" do
-    owner "root"
-    group "root"
+    owner node['bcpc']['ceph']['user']
+    group node['bcpc']['ceph']['user']
     mode "0644"
     action :touch
 end
 
 bash "write-client-radosgw-key" do
+    user node['bcpc']['ceph']['user']
     code <<-EOH
         RGW_KEY=`ceph --name client.admin --keyring /etc/ceph/ceph.client.admin.keyring auth get-or-create-key client.radosgw.gateway osd 'allow rwx' mon 'allow rw'`
         ceph-authtool "/var/lib/ceph/radosgw/ceph-radosgw.gateway/keyring" \
@@ -63,7 +70,9 @@ rgw_optimal_pg = power_of_2(get_ceph_osd_nodes.length*node['bcpc']['ceph']['pgs_
 
 rgw_rule = (node['bcpc']['ceph']['rgw']['type'] == "ssd") ? node['bcpc']['ceph']['ssd']['ruleset'] : node['bcpc']['ceph']['hdd']['ruleset']
 
-%w{.rgw .rgw.control .rgw.gc .rgw.root .users.uid .users.email .users .usage .log .intent-log .rgw.buckets .rgw.buckets.index .rgw.buckets.extra}.each do |pool|
+jewel_rgw_pools = %w(default.rgw.control default.rgw.data.root default.rgw.gc default.rgw.log default.rgw.users.uid default.rgw.users.keys default.rgw.meta default.rgw.usage)
+
+(%w(.rgw .rgw.control .rgw.gc .rgw.root .users.uid .users.email .users .usage .log .intent-log .rgw.buckets .rgw.buckets.index .rgw.buckets.extra) + jewel_rgw_pools).each do |pool|
     bash "create-rados-pool-#{pool}" do
         code <<-EOH
             ceph osd pool create #{pool} #{rgw_optimal_pg}

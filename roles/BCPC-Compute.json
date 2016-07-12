@@ -12,7 +12,6 @@
       "recipe[bcpc::ceph-work]",
       "recipe[bcpc::ceph-osd]",
       "recipe[bcpc::nova-work]",
-      "role[BCPC-Rgwnode]",
       "recipe[bcpc::diamond]",
       "recipe[bcpc::fluentd]",
       "recipe[bcpc::tpm]",
