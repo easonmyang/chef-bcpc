@@ -26,18 +26,18 @@ bash 'ceph-mon-mkfs' do
     mkdir -p #{mon_path}
     ceph-mon --mkfs -i "#{node['hostname']}" --keyring "/etc/ceph/ceph.mon.keyring"
   EOH
-  user 'ceph'
+#  user 'ceph'
   not_if "test -f /var/lib/ceph/mon/ceph-#{node['hostname']}/keyring"
 end
 
 # add files required by Jewel upstart scripts for monitor autostart
-%w( done upstart ).each do |f|
-  file ::File.join(mon_path, f) do
-    owner 'ceph'
-    group 'ceph'
-    mode  00644
-  end
-end
+# %w( done upstart ).each do |f|
+#   file ::File.join(mon_path, f) do
+#     owner 'ceph'
+#     group 'ceph'
+#     mode  00644
+#   end
+# end
 
 template '/etc/init/ceph-mon-renice.conf' do
   source 'ceph-upstart.ceph-mon-renice.conf.erb'

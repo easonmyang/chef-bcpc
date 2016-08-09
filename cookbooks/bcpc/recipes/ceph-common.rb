@@ -54,15 +54,16 @@ ruby_block "initialize-ceph-common-config" do
     end
 end
 
-bash 'write-ceph-mon-key' do
-  code <<-EOH
-    ceph-authtool "/etc/ceph/ceph.mon.keyring" \
-    --create-keyring \
-    --name=mon. \
-    --add-key="#{get_config('ceph-mon-key')}" \
-    --cap mon 'allow *'  
-  EOH
-  user 'ceph'
+ruby_block 'write-ceph-mon-key' do
+  block do
+    %x(
+      ceph-authtool "/etc/ceph/ceph.mon.keyring" \
+      --create-keyring \
+      --name=mon. \
+      --add-key="#{get_config('ceph-mon-key')}" \
+      --cap mon 'allow *'
+    )
+  end
   not_if "test -f /etc/ceph/ceph.mon.keyring"
 end
 
@@ -73,8 +74,8 @@ template '/etc/ceph/ceph.conf' do
 end
 
 directory "/var/run/ceph/" do
-  owner "ceph"
-  group "ceph"
+#  owner "ceph"
+#  group "ceph"
   mode  "0755"
 end
 
